@@ -73,23 +73,38 @@ const Cart = () => {
     const newCartItems = cartItems.filter((item) => item.id !== itemId);
     setCartItems(newCartItems);
   };
+  const convertBase64ToDataURL = (base64String, mimeType = 'image/jpeg') => {
+    if (!base64String) return unplugged; // Return fallback image if no data
 
+    // If it's already a data URL, return as is
+    if (base64String.startsWith('data:')) {
+      return base64String;
+    }
+
+    // If it's already a URL, return as is
+    if (base64String.startsWith('http')) {
+      return base64String;
+    }
+
+    // Convert base64 string to data URL
+    return `data:${mimeType};base64,${base64String}`;
+  };
   const handleCheckout = async () => {
     try {
       for (const item of cartItems) {
         const { imageUrl, imageName, imageData, imageType, quantity, ...rest } = item;
         const updatedStockQuantity = item.stockQuantity - item.quantity;
-  
+
         const updatedProductData = { ...rest, stockQuantity: updatedStockQuantity };
         console.log("updated product data", updatedProductData);
-  
+
         const cartProduct = new FormData();
         cartProduct.append("imageFile", cartImage);
         cartProduct.append(
           "product",
           new Blob([JSON.stringify(updatedProductData)], { type: "application/json" })
         );
-  
+
         await axios
           .put(`${baseUrl}/api/product/${item.id}`, cartProduct, {
             headers: {
@@ -145,7 +160,7 @@ const Cart = () => {
                             <td>
                               <div className="d-flex align-items-center">
                                 <img
-                                  src={item.productImage}
+                                  src={convertBase64ToDataURL(item.productImage)}
                                   alt={item.name}
                                   className="rounded me-3"
                                   width="80"
@@ -158,7 +173,7 @@ const Cart = () => {
                                 </div>
                               </div>
                             </td>
-                            <td>${item.price}</td>
+                            <td>₹ {item.price}</td>
                             <td>
                               <div className="input-group input-group-sm" style={{ width: "120px" }}>
                                 <button
@@ -183,7 +198,7 @@ const Cart = () => {
                                 </button>
                               </div>
                             </td>
-                            <td className="fw-bold">${(item.price * item.quantity).toFixed(2)}</td>
+                            <td className="fw-bold">₹ {(item.price * item.quantity).toFixed(2)}</td>
                             <td>
                               <button
                                 className="btn btn-sm btn-outline-danger"
@@ -197,16 +212,16 @@ const Cart = () => {
                       </tbody>
                     </table>
                   </div>
-                  
+
                   <div className="card mt-3">
                     <div className="card-body">
                       <div className="d-flex justify-content-between align-items-center">
                         <h5 className="mb-0">Total:</h5>
-                        <h5 className="mb-0">${totalPrice.toFixed(2)}</h5>
+                        <h5 className="mb-0">₹ {totalPrice.toFixed(2)}</h5>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="d-grid mt-4">
                     <Button
                       variant="primary"
@@ -222,7 +237,7 @@ const Cart = () => {
           </div>
         </div>
       </div>
-      
+
       <CheckoutPopup
         show={showModal}
         handleClose={() => setShowModal(false)}
